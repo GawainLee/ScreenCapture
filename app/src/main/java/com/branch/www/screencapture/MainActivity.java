@@ -1,10 +1,13 @@
 package com.branch.www.screencapture;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 
 import static android.app.Activity.RESULT_OK;
@@ -48,11 +51,27 @@ public class MainActivity extends FragmentActivity {
 
         if (resultCode == RESULT_OK && data != null) {
           FloatWindowsService.setResultData(data);
-          startService(new Intent(getApplicationContext(), FloatWindowsService.class));
+          Intent intentService = new Intent(getApplicationContext(), FloatWindowsService.class);
+          startService(intentService);
         }
         break;
     }
 
   }
+
+  ServiceConnection conn = new ServiceConnection() {
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+
+    }
+
+    private  FloatWindowsService floatWindowsService;
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+      //返回一个MsgService对象
+      floatWindowsService = ((FloatWindowsService.MsgBinder)service).getService();
+
+    }
+  };
 
 }

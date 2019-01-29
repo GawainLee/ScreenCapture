@@ -16,6 +16,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
  *
@@ -51,13 +54,13 @@ public class PreviewPictureActivity extends FragmentActivity implements GlobalSc
       System.out.println("@@@@@@@@@ "+getBitmapPixel(bitmap,100,100));
 
 
-    Log.e("ryze", "预览图片");
-    mPreviewImageView.setImageBitmap(bitmap);
-    mPreviewImageView.setVisibility(View.GONE);
-
-    if (bitmap != null) {
-      screenshot.takeScreenshot(bitmap, this, true, true);
-    }
+//    Log.e("ryze", "预览图片");
+//    mPreviewImageView.setImageBitmap(bitmap);
+//    mPreviewImageView.setVisibility(View.GONE);
+//
+//    if (bitmap != null) {
+//      screenshot.takeScreenshot(bitmap, this, true, true);
+//    }
 
   }
 
@@ -83,7 +86,7 @@ public class PreviewPictureActivity extends FragmentActivity implements GlobalSc
         if (!appDir.exists()) {
             appDir.mkdir();
         }
-        File file = new File(appDir, fileName);
+        File file = new File(appDir,  fileName  + ".png");
         try {
             FileOutputStream fos = new FileOutputStream(file);
             bmp.compress(Bitmap.CompressFormat.JPEG, 100, fos);

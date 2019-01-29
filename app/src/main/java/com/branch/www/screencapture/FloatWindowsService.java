@@ -16,6 +16,7 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -90,10 +91,10 @@ public class FloatWindowsService extends Service {
     FloatWindowsService.mResultData = mResultData;
   }
 
-  @Override
-  public IBinder onBind(Intent intent) {
-    return null;
-  }
+//  @Override
+//  public IBinder onBind(Intent intent) {
+//    return null;
+//  }
 
   private void createFloatView() {
     mGestureDetector = new GestureDetector(getApplicationContext(), new FloatGestrueTouchListener());
@@ -382,5 +383,21 @@ public class FloatWindowsService extends Service {
     tearDownMediaProjection();
   }
 
+  /**
+   * 返回一个Binder对象
+   */
+  @Override
+  public IBinder onBind(Intent intent) {
+    return new MsgBinder();
+  }
 
+  public class MsgBinder extends Binder {
+    /**
+     * 获取当前Service的实例
+     * @return
+     */
+    public FloatWindowsService getService(){
+      return FloatWindowsService.this;
+    }
+  }
 }
