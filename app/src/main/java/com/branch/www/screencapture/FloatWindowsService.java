@@ -3,8 +3,10 @@ package com.branch.www.screencapture;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
@@ -16,11 +18,13 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Binder;
 import android.os.Build;
 import android.os.Environment;
+//import android.os.Handler;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.os.AsyncTaskCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -31,11 +35,17 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
+import com.branch.www.screencapture.BroadCastRunnable.ServiceToActivityRunnable;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import static com.branch.www.screencapture.BroadCastRunnable.BroadCastUtil.ACTIVITY_TO_SERVICE_KEY;
+import static com.branch.www.screencapture.BroadCastRunnable.BroadCastUtil.FILTER;
+import static java.lang.Thread.sleep;
 
 /**
  * Created by branch on 2016-5-25.
@@ -73,6 +83,7 @@ public class FloatWindowsService extends Service {
   private int mScreenHeight;
   private int mScreenDensity;
 
+  private Thread thread;
 
   @Override
   public void onCreate() {
@@ -81,6 +92,7 @@ public class FloatWindowsService extends Service {
     createFloatView();
 
     createImageReader();
+    manageServiceJobs();
   }
 
   public static Intent getResultData() {
@@ -91,10 +103,10 @@ public class FloatWindowsService extends Service {
     FloatWindowsService.mResultData = mResultData;
   }
 
-//  @Override
-//  public IBinder onBind(Intent intent) {
-//    return null;
-//  }
+  @Override
+  public IBinder onBind(Intent intent) {
+    return null;
+  }
 
   private void createFloatView() {
     mGestureDetector = new GestureDetector(getApplicationContext(), new FloatGestrueTouchListener());
@@ -127,10 +139,46 @@ public class FloatWindowsService extends Service {
     mFloatView.setOnTouchListener(new View.OnTouchListener() {
       @Override
       public boolean onTouch(View v, MotionEvent event) {
+        runAutoClick();
+        System.out.println("OnTouchEven");
         return mGestureDetector.onTouchEvent(event);
       }
     });
 
+  }
+
+  private void runAutoClick(){
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        while (true){
+          autoCupture();
+          System.out.println("Running Auto Click");
+          try {
+            sleep(20000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }).start();
+  }
+
+  public void autoCupture(){
+    //模拟触屏点击屏幕事件
+    int x = 0;
+    int y = 0;
+    long downTime = SystemClock.uptimeMillis();
+    final MotionEvent downEvent = MotionEvent.obtain(
+            downTime, downTime, MotionEvent.ACTION_DOWN, x, y, 0);
+    downTime += 500;
+    final MotionEvent upEvent = MotionEvent.obtain(
+            downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y, 0);
+    //添加到webview_loading_round_iv上
+    mFloatView.onTouchEvent(downEvent);
+    mFloatView.onTouchEvent(upEvent);
+    downEvent.recycle();
+    upEvent.recycle();
   }
 
   private class FloatGestrueTouchListener implements GestureDetector.OnGestureListener {
@@ -386,18 +434,75 @@ public class FloatWindowsService extends Service {
   /**
    * 返回一个Binder对象
    */
+//  @Override
+//  public IBinder onBind(Intent intent) {
+//    return new MsgBinder();
+//  }
+
+//  public class MsgBinder extends Binder {
+//    /**
+//     * 获取当前Service的实例
+//     * @return
+//     */
+//    public FloatWindowsService getService(){
+//      return FloatWindowsService.this;
+//    }
+//
+//
+//    public void setData(String data){
+//      FloatWindowsService.this.data = data;
+//    }
+//  }
+
+
   @Override
-  public IBinder onBind(Intent intent) {
-    return new MsgBinder();
+  public int onStartCommand(Intent intent, int flags, int startId) {
+    Log.d(" ", "onStartCommand");
+
+
+
+    return super.onStartCommand(intent, flags, startId);
   }
 
-  public class MsgBinder extends Binder {
-    /**
-     * 获取当前Service的实例
-     * @return
-     */
-    public FloatWindowsService getService(){
-      return FloatWindowsService.this;
-    }
+  private void sentMessageToActivity(String message){
+    // farklı thread'e çıkarak asenkron işlem başlatılır
+
+    ServiceToActivityRunnable serviceToActivityRunnable = new ServiceToActivityRunnable(message ,getBaseContext());
+    thread = new Thread(serviceToActivityRunnable);
+    thread.start();
+  }
+
+
+  private void createBroadCastFromActivity(){
+    // service'ten yayınlanacak olan broadcast'i dinliyoruz
+    LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+      @Override
+      public void onReceive(Context context, Intent intent) {
+          String tempMessage =  intent.getStringExtra(ACTIVITY_TO_SERVICE_KEY);
+          if (tempMessage != null){
+              System.out.println("intent.getStringExtra(ACTIVITY_TO_SERVICE_KEY) " + intent.getStringExtra(ACTIVITY_TO_SERVICE_KEY));
+          }
+      }
+    }, new IntentFilter(FILTER));
+  }
+
+  int i = 0;
+  private void manageServiceJobs(){
+    createBroadCastFromActivity();
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        while (true){
+          try {
+            sleep(2000);
+            sentMessageToActivity(" message service to activity " + i);
+            i++;
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }).start();
   }
 }
+
