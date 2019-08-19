@@ -3,10 +3,8 @@ package com.branch.www.screencapture;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
@@ -20,11 +18,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
-//import android.os.Handler;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.SystemClock;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.os.AsyncTaskCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -35,17 +30,19 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
-import com.branch.www.screencapture.BroadCastRunnable.ServiceToActivityRunnable;
+import com.branch.www.screencapture.TargetImageTool.AnalystListTargetImagePoints;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 
-import static com.branch.www.screencapture.BroadCastRunnable.BroadCastUtil.ACTIVITY_TO_SERVICE_KEY;
-import static com.branch.www.screencapture.BroadCastRunnable.BroadCastUtil.FILTER;
-import static java.lang.Thread.sleep;
+//import android.os.Handler;
 
 /**
  * Created by branch on 2016-5-25.
@@ -54,7 +51,6 @@ import static java.lang.Thread.sleep;
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class FloatWindowsService extends Service {
-
 
   public static Intent newIntent(Context context, Intent mResultData) {
 
@@ -85,6 +81,8 @@ public class FloatWindowsService extends Service {
 
   private Thread thread;
 
+  private String targetList = "";
+
   @Override
   public void onCreate() {
     super.onCreate();
@@ -92,7 +90,17 @@ public class FloatWindowsService extends Service {
     createFloatView();
 
     createImageReader();
-    manageServiceJobs();
+
+    //read target image list
+
+    String filePath= Environment.getExternalStorageDirectory()
+            + File.separator + Environment.DIRECTORY_DCIM
+            + File.separator+"Camera"+File.separator
+            + "MyFile1.txt";
+
+    targetList = TXTTool.ReadTxtFile(filePath);
+//    System.out.println(targetList);
+//    targetList = "1,777,203,90,90,92]2,790,204,255,255,255]3,794,204,90,90,92]4,794,222,255,255,255]5,794,228,90,90,92]6,790,228,255,255,255]7,784,217,90,90,92]8,782,226,90,90,92]9,776,222,255,255,255]10,784,217,90,90,92]}1,505,301,90,90,92]2,649,296,48,48,48]}";
   }
 
   public static Intent getResultData() {
@@ -107,6 +115,7 @@ public class FloatWindowsService extends Service {
   public IBinder onBind(Intent intent) {
     return null;
   }
+
 
   private void createFloatView() {
     mGestureDetector = new GestureDetector(getApplicationContext(), new FloatGestrueTouchListener());
@@ -139,47 +148,45 @@ public class FloatWindowsService extends Service {
     mFloatView.setOnTouchListener(new View.OnTouchListener() {
       @Override
       public boolean onTouch(View v, MotionEvent event) {
-        runAutoClick();
-        System.out.println("OnTouchEven");
         return mGestureDetector.onTouchEvent(event);
       }
     });
 
   }
 
-  private void runAutoClick(){
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        while (true){
-          autoCupture();
-          System.out.println("Running Auto Click");
-          try {
-            sleep(20000);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-      }
-    }).start();
-  }
+//  private void runAutoClick(){
+//    new Thread(new Runnable() {
+//      @Override
+//      public void run() {
+//        while (true){
+//          autoCupture();
+////          System.out.println("Running Auto Click");
+//          try {
+//            sleep(20000);
+//          } catch (InterruptedException e) {
+//            e.printStackTrace();
+//          }
+//        }
+//      }
+//    }).start();
+//  }
 
-  public void autoCupture(){
-    //模拟触屏点击屏幕事件
-    int x = 0;
-    int y = 0;
-    long downTime = SystemClock.uptimeMillis();
-    final MotionEvent downEvent = MotionEvent.obtain(
-            downTime, downTime, MotionEvent.ACTION_DOWN, x, y, 0);
-    downTime += 500;
-    final MotionEvent upEvent = MotionEvent.obtain(
-            downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y, 0);
-    //添加到webview_loading_round_iv上
-    mFloatView.onTouchEvent(downEvent);
-    mFloatView.onTouchEvent(upEvent);
-    downEvent.recycle();
-    upEvent.recycle();
-  }
+//  public void autoCupture(){
+//    //模拟触屏点击屏幕事件
+//    int x = 0;
+//    int y = 0;
+//    long downTime = SystemClock.uptimeMillis();
+//    final MotionEvent downEvent = MotionEvent.obtain(
+//            downTime, downTime, MotionEvent.ACTION_DOWN, x, y, 0);
+//    downTime += 500;
+//    final MotionEvent upEvent = MotionEvent.obtain(
+//            downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y, 0);
+//    //添加到webview_loading_round_iv上
+//    mFloatView.onTouchEvent(downEvent);
+//    mFloatView.onTouchEvent(upEvent);
+//    downEvent.recycle();
+//    upEvent.recycle();
+//  }
 
   private class FloatGestrueTouchListener implements GestureDetector.OnGestureListener {
     int lastX, lastY;
@@ -327,8 +334,6 @@ public class FloatWindowsService extends Service {
       File fileImage = null;
       if (bitmap != null) {
         try {
-          analystImage(bitmap);
-
           fileImage = new File(FileUtil.getScreenShotsName(getApplicationContext()));
           if (!fileImage.exists()) {
             fileImage.createNewFile();
@@ -358,35 +363,6 @@ public class FloatWindowsService extends Service {
       return null;
     }
 
-    public void analystImage (Bitmap bitmap){
-      //系统相册目录
-      String galleryPath= Environment.getExternalStorageDirectory()
-              + File.separator + Environment.DIRECTORY_DCIM
-              +File.separator+"Camera"+File.separator;
-
-      saveImage(bitmap,galleryPath,"testImage");
-    }
-
-    //保存图片到本地路径
-    public File saveImage(Bitmap bmp, String path, String fileName) {
-      File appDir = new File(path);
-      if (!appDir.exists()) {
-        appDir.mkdir();
-      }
-      File file = new File(appDir, fileName);
-      try {
-        FileOutputStream fos = new FileOutputStream(file);
-        bmp.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-        fos.flush();
-        fos.close();
-      } catch (FileNotFoundException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      return file;
-    }
-
     @Override
     protected void onPostExecute(Bitmap bitmap) {
       super.onPostExecute(bitmap);
@@ -395,7 +371,12 @@ public class FloatWindowsService extends Service {
 
         ((ScreenCaptureApplication) getApplication()).setmScreenCaptureBitmap(bitmap);
         Log.e("ryze", "获取图片成功");
-        startActivity(PreviewPictureActivity.newIntent(getApplicationContext()));
+
+//        startActivity(PreviewPictureActivity.newIntent(getApplicationContext()));
+
+        //create by Gawain
+        bitmapCapture = bitmap;
+        startDownLoad();
       }
 
       mFloatView.setVisibility(View.VISIBLE);
@@ -431,78 +412,85 @@ public class FloatWindowsService extends Service {
     tearDownMediaProjection();
   }
 
-  /**
-   * 返回一个Binder对象
-   */
-//  @Override
-//  public IBinder onBind(Intent intent) {
-//    return new MsgBinder();
-//  }
-
-//  public class MsgBinder extends Binder {
-//    /**
-//     * 获取当前Service的实例
-//     * @return
-//     */
-//    public FloatWindowsService getService(){
-//      return FloatWindowsService.this;
-//    }
-//
-//
-//    public void setData(String data){
-//      FloatWindowsService.this.data = data;
-//    }
-//  }
-
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    Log.d(" ", "onStartCommand");
-
-
-
+    //create by gawain
+//    startDownLoad();
+    ////
     return super.onStartCommand(intent, flags, startId);
   }
 
-  private void sentMessageToActivity(String message){
-    // farklı thread'e çıkarak asenkron işlem başlatılır
 
-    ServiceToActivityRunnable serviceToActivityRunnable = new ServiceToActivityRunnable(message ,getBaseContext());
-    thread = new Thread(serviceToActivityRunnable);
-    thread.start();
-  }
+  //create by gawain
 
+  /**
+   * 进度条的最大值
+   */
+  public static final int MAX_PROGRESS = 100;
+  /**
+   * 进度条的进度值
+   */
+  private int progress = 0;
 
-  private void createBroadCastFromActivity(){
-    // service'ten yayınlanacak olan broadcast'i dinliyoruz
-    LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
-      @Override
-      public void onReceive(Context context, Intent intent) {
-          String tempMessage =  intent.getStringExtra(ACTIVITY_TO_SERVICE_KEY);
-          if (tempMessage != null){
-              System.out.println("intent.getStringExtra(ACTIVITY_TO_SERVICE_KEY) " + intent.getStringExtra(ACTIVITY_TO_SERVICE_KEY));
-          }
-      }
-    }, new IntentFilter(FILTER));
-  }
+  //create by Gawain
+  private Intent intent = new Intent("com.branch.www.screencapture.MainActivity");
 
-  int i = 0;
-  private void manageServiceJobs(){
-    createBroadCastFromActivity();
+  //create by Gawain
+  //pass to main bitmap
+  public Bitmap bitmapCapture;
+
+  //create by Gawain
+  public CaptureBitmap captureBitmap = new CaptureBitmap();
+
+  /**
+   * 模拟下载任务，每秒钟更新一次
+   */
+  //create by Gawain
+  public void startDownLoad(){
     new Thread(new Runnable() {
+
       @Override
       public void run() {
-        while (true){
-          try {
-            sleep(2000);
-            sentMessageToActivity(" message service to activity " + i);
-            i++;
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
+
+        if(bitmapCapture != null)
+        {
+          String message = analystBitmap(bitmapCapture);
+          saveImage(bitmapCapture);
+          intent.putExtra("progress",message);
+          sendBroadcast(intent);
         }
       }
     }).start();
   }
+
+  //create by Gawain
+  public String analystBitmap(Bitmap bitmap)
+  {
+    //**************
+    //create by gawain
+    // analysis image
+    AnalystListTargetImagePoints analystListTargetImagePoints = new AnalystListTargetImagePoints(this.targetList);
+    FindTargetImageByPoint findTargetImageByPoint = new FindTargetImageByPoint();
+    boolean isFind = findTargetImageByPoint.findTarget(bitmap, analystListTargetImagePoints.getListTargetImagePoints().getListTargetImagePoints().get(0).getImagePoints());
+    System.out.println("@@@@@@@@@@**************  isFind " + isFind);
+    return "check " + isFind;
+    //**************
+  }
+
+  //create by Gawain
+  public void saveImage(Bitmap bitmap)
+  {
+
+    //**************
+    //save image gawain
+    // 系统相册目录
+    String galleryPath= Environment.getExternalStorageDirectory()
+            + File.separator + Environment.DIRECTORY_DCIM
+            +File.separator+"Camera"+File.separator;
+    SaveImageTool.saveImage(bitmap,galleryPath,"testImage123");
+    //**************
+  }
+
 }
 

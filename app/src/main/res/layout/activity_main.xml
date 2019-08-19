@@ -1,17 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="com.branch.www.screencapture.MainActivity">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context="com.branch.www.screencapture.MainActivity">
 
-  <TextView
-      android:text="Hello World!"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="100px"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/scan"
+                android:layout_width="wrap_content"
+                android:layout_height="100px"
+                android:layout_weight="1"
+                android:text="BON" />
+
+            <Button
+                android:id="@+id/off"
+                android:layout_width="wrap_content"
+                android:layout_height="100px"
+                android:layout_weight="1"
+                android:text="BOFF" />
+
+            <Button
+                android:id="@+id/PairedBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="100px"
+                android:layout_weight="1"
+                android:text="paired" />
+
+            <Button
+                android:id="@+id/discover"
+                android:layout_width="wrap_content"
+                android:layout_height="100px"
+                android:layout_weight="1"
+                android:text="New" />
+
+            <Button
+                android:id="@+id/checkboxLED1"
+                android:layout_width="wrap_content"
+                android:layout_height="100px"
+                android:layout_weight="1"
+                android:text="Test" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="200px"
+            android:orientation="horizontal">
+
+            <RelativeLayout
+                android:id="@+id/testButtonsLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+
+                <Button
+                    android:id="@+id/testbutton1"
+                    android:layout_width="100px"
+                    android:layout_height="100px"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:text="1" />
+
+                <Button
+                    android:id="@+id/testbutton2"
+                    android:layout_width="100px"
+                    android:layout_height="100px"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="128dp"
+                    android:text="2" />
+
+                <Button
+                    android:id="@+id/testbutton3"
+                    android:layout_width="100px"
+                    android:layout_height="100px"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="62dp"
+                    android:text="3" />
+
+                <Button
+                    android:id="@+id/testbutton4"
+                    android:layout_width="100px"
+                    android:layout_height="100px"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginStart="280dp"
+                    android:text="4" />
+
+                <Button
+                    android:id="@+id/testbutton5"
+                    android:layout_width="100px"
+                    android:layout_height="100px"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="180dp"
+                    android:text="5" />
+            </RelativeLayout>
+
+        </LinearLayout>
+
+
+        <ListView
+            android:id="@+id/devicesListView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:choiceMode="singleChoice" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="RX:"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/readBuffer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_weight="0.9"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="&lt;Read Buffer>" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Status:"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/bluetoothStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:layout_alignTop="@+id/checkboxLED1"
+                android:layout_centerHorizontal="true"
+                android:layout_weight="0.9"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="&lt;Bluetooth Status>" />
+        </LinearLayout>
+    </LinearLayout>
+
 </RelativeLayout>
+
